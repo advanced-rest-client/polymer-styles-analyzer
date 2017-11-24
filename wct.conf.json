@@ -1,5 +1,6 @@
 {
   "verbose": false,
+  "compile": "always",
   "plugins": {
     "local": {
       "disabled": true,
