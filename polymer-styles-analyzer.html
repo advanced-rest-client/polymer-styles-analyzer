@@ -1,0 +1,272 @@
+<!--
+@license
+Copyright 2016 The Advanced REST client authors <arc@mulesoft.com>
+Licensed under the Apache License, Version 2.0 (the "License"); you may not
+use this file except in compliance with the License. You may obtain a copy of
+the License at
+http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+License for the specific language governing permissions and limitations under
+the License.
+-->
+<link rel="import" href="../polymer/polymer.html">
+<!--
+CSS variables and mixin discovery element for Polymer powered web components.
+
+It looks for a custom elements in the DOM and uses Polymer APIs to read styles
+declaration for the element and extracts CSS variables and mixins from it.
+The element looks inside custom element to search for additional imports than
+the one defined in main document.
+
+### Example
+
+```html
+<polymer-styles-analyzer id="analyzer"></polymer-styles-analyzer>
+<script>
+document.getElementById('analyzer').analyze()
+.then(result => console.log(result));
+</script>
+```
+
+## Parsing results
+
+A result of parsing the data is an array of styles definitions:
+
+```javascript
+{
+  "name": "custom-element-name",
+  "mixins": ["--mixin-name"],
+  "variables": [{
+    "name": "--variable-name",
+    "defaultValue": "#e0e0e0"
+  }],
+  "hasVariables": true, // true if variables length > 0
+  "hasMixins": true, // true if mixins length > 0
+  "hasStyles": true // true if hasVariables or hasMixins is true
+}
+```
+
+@group Logic Elements
+@element polymer-styles-analyzer
+@demo demo/index.html
+-->
+<script>
+Polymer({
+  is: 'polymer-styles-analyzer',
+  properties: {
+    // cached analyzed elements
+    _cache: Object,
+    // List of elements to analyze
+    _wokingElements: Array,
+    _propMatcher: {
+      type: Object,
+      value: function() {
+        return /--[a-zA-Z0-9\-]+/;
+      }
+    },
+    _varMatcher: {
+      type: Object,
+      value: function() {
+        return /var\((--[a-zA-Z0-9\-]+)(?:,\s?(.*)\))?/m;
+      }
+    },
+    /**
+     * List of styles in parsed elements.
+     * See description for data model.
+     */
+    parsedStyles: {
+      type: Array,
+      notify: true,
+      readOnly: true
+    }
+  },
+  /**
+   * Analyzes main document DOM and extracts css variables and mixins from
+   * Polymer powered web components.
+   */
+  analyze: function() {
+    this._cache = {};
+    var elements = this.getPotentialCustomElements();
+    this._wokingElements = Array.from(elements);
+    return this._extractRules()
+    .then(rules => {
+      let result = this._computeResult(rules);
+      this._setParsedStyles(result);
+      return result;
+    });
+  },
+  /**
+   * Creates a list of potential custom elements that exists in main document.
+   */
+  getPotentialCustomElements() {
+    var nodes = document.body.querySelectorAll('*');
+    var names = [];
+    for (let i = 0, len = nodes.length; i < len; i++) {
+      if (!nodes[i].nodeName) {
+        continue;
+      }
+      let name = nodes[i].nodeName.toLowerCase();
+      if (name.indexOf('-') === -1) {
+        continue;
+      }
+      if (names.indexOf(name) !== -1) {
+        continue;
+      }
+      names.push(name);
+    }
+    return names;
+  },
+
+  _extractRules: function() {
+    var element = this._wokingElements.shift();
+    if (!element) {
+      var result = this._cache;
+      this._cache = undefined;
+      return Promise.resolve(result);
+    }
+    // {module: 'paper-input', 'variables': ['--var-name'], 'mixins': ['--mixin-name']}
+    this._extractFromElement(element);
+    return new Promise((resolve) => {
+      this.async(() => resolve(this._extractRules()), 1);
+    });
+  },
+
+  _extractFromElement: function(moduleName) {
+    var element = Polymer.DomModule.import(moduleName);
+    if (!element) {
+      return;
+    }
+    var parsed = this.parseElement(element);
+    if (parsed) {
+      let result = {
+        name: moduleName,
+        variables: this.getVariables(parsed),
+        mixins: this.getMixins(parsed)
+      };
+      result.hasVariables = !!(result.variables.length);
+      result.hasMixins = !!(result.mixins.length);
+      result.hasStyles = result.hasVariables || result.hasMixins;
+      this._cache[moduleName] = result;
+    }
+    this.extractDependencies(moduleName);
+  },
+  /**
+   * Parses CSS styles definition from a `dom-module`.
+   * @param {Object} element A `dom-module` element with custom element definition
+   * @return {Object} Polymer's css parse result.
+   */
+  parseElement: function(element) {
+    if (!element._cssText) {
+      element._cssText = this.cssFromElement(element);
+    }
+    return Polymer.CssParse.parse(element._cssText);
+  },
+  /**
+   * Extracts variable names from css parsing result.
+   *
+   * @param {Object} parsed Result of calling `parseElement()`
+   * @return {Array<Object>} List of variables in styles definition.
+   */
+  getVariables: function(parsed) {
+    var result = [];
+    if (!parsed.rules || !parsed.rules.length) {
+      return result;
+    }
+    for (let i = 0, len = parsed.rules.length; i < len; i++) {
+      let matches = parsed.rules[i].parsedCssText.match(Polymer.CssParse._rx.varApply);
+      if (!matches) {
+        continue;
+      }
+      for (let j = 0, jLen = matches.length; j < jLen; j++) {
+        let varMatch = matches[j].match(this._varMatcher);
+        if (varMatch) {
+          let data = {
+            name: varMatch[1]
+          };
+          if (varMatch[2]) {
+            data.defaultValue = varMatch[2];
+          } else {
+            data.defaultValue = '';
+          }
+          result.push(data);
+        }
+      }
+    }
+    return result;
+  },
+  /**
+   * Extracts mixins names from css parsing result.
+   *
+   * @param {Object} parsed Result of calling `parseElement()`
+   * @return {Array<String>} List of mixins in styles definition.
+   */
+  getMixins: function(parsed) {
+    var result = [];
+    if (!parsed.rules || !parsed.rules.length) {
+      return result;
+    }
+    for (let i = 0, len = parsed.rules.length; i < len; i++) {
+      let matches = parsed.rules[i].parsedCssText.match(Polymer.CssParse._rx.mixinApply);
+      if (!matches) {
+        continue;
+      }
+      for (let j = 0, jLen = matches.length; j < jLen; j++) {
+        let varMatch = matches[j].match(this._propMatcher);
+        if (varMatch) {
+          result.push(varMatch[0]);
+        }
+      }
+    }
+    return result;
+  },
+  /**
+   * Looks for a dependencies in the import file and updates the list of
+   * `_wokingElements` if element is not on the list.
+   *
+   * @param {String} moduleName Name of the custom element.
+   */
+  extractDependencies: function(moduleName) {
+    var selector = 'link[rel="import"][href*="';
+    selector += moduleName + '"]';
+    var link = document.querySelector(selector);
+    if (!link) {
+      return;
+    }
+    var imports = link.import.querySelectorAll('link[rel]');
+    imports.forEach(item => {
+      let name = this.nameFromUrl(item.href);
+      this._mayAppendModule(name);
+    });
+  },
+  /**
+   * Gets a name of custom element from it's import URL.
+   * @param {String} url Element import location
+   * @return {String} Name of the module.
+   */
+  nameFromUrl: function(url) {
+    url = url.substr(url.lastIndexOf('/') + 1);
+    url = url.substr(0, url.indexOf('.'));
+    return url;
+  },
+
+  _mayAppendModule: function(moduleName) {
+    if (this._cache[moduleName]) {
+      return;
+    }
+    if (this._wokingElements.indexOf(moduleName) !== -1) {
+      return;
+    }
+    this._wokingElements.push(moduleName);
+  },
+
+  _computeResult: function(rules) {
+    var result = [];
+    Object.keys(rules).forEach(name => {
+      result.push(rules[name]);
+    });
+    return result;
+  }
+});
+</script>
