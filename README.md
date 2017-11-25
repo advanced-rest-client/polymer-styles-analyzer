@@ -26,7 +26,9 @@ A result of parsing the data is an array of styles definitions:
 ```javascript
 {
   "name": "custom-element-name",
-  "mixins": ["--mixin-name"],
+  "mixins": [{
+    "name": "--mixin-name"
+  }],
   "variables": [{
     "name": "--variable-name",
     "defaultValue": "#e0e0e0"

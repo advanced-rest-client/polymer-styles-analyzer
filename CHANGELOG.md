@@ -1,3 +1,13 @@
+<a name="0.1.2"></a>
+## [0.1.2](https://github.com/advanced-rest-client/polymer-styles-analyzer/compare/0.1.1...0.1.2) (2017-11-25)
+
+
+### Update
+
+* Updated data model for the mixins. ([50cafbfd5e550e2077ecc0a8efc24dcd5f1b12e2](https://github.com/advanced-rest-client/polymer-styles-analyzer/commit/50cafbfd5e550e2077ecc0a8efc24dcd5f1b12e2))
+
+
+
 <a name="0.1.1"></a>
 ## 0.1.1 (2017-11-24)
 
