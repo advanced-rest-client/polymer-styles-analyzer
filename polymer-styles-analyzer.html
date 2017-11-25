@@ -173,10 +173,10 @@ Polymer({
    */
   getVariables: function(parsed) {
     var result = [];
-    var names = [];
     if (!parsed.rules || !parsed.rules.length) {
       return result;
     }
+    var names = [];
     for (let i = 0, len = parsed.rules.length; i < len; i++) {
       let matches = parsed.rules[i].parsedCssText.match(Polymer.CssParse._rx.varApply);
       if (!matches) {
@@ -218,6 +218,7 @@ Polymer({
     if (!parsed.rules || !parsed.rules.length) {
       return result;
     }
+    var names = [];
     for (let i = 0, len = parsed.rules.length; i < len; i++) {
       let matches = parsed.rules[i].parsedCssText.match(Polymer.CssParse._rx.mixinApply);
       if (!matches) {
@@ -226,8 +227,13 @@ Polymer({
       for (let j = 0, jLen = matches.length; j < jLen; j++) {
         let varMatch = matches[j].match(this._propMatcher);
         if (varMatch) {
+          let name = varMatch[0];
+          if (names.indexOf(name) !== -1) {
+            continue;
+          }
+          names.push(name);
           result.push({
-            name: varMatch[0]
+            name: name
           });
         }
       }
