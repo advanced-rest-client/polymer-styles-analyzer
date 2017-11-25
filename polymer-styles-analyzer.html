@@ -37,7 +37,9 @@ A result of parsing the data is an array of styles definitions:
 ```javascript
 {
   "name": "custom-element-name",
-  "mixins": ["--mixin-name"],
+  "mixins": [{
+    "name": "--mixin-name"
+  }],
   "variables": [{
     "name": "--variable-name",
     "defaultValue": "#e0e0e0"
@@ -200,7 +202,7 @@ Polymer({
    * Extracts mixins names from css parsing result.
    *
    * @param {Object} parsed Result of calling `parseElement()`
-   * @return {Array<String>} List of mixins in styles definition.
+   * @return {Array<Object>} List of mixins in styles definition.
    */
   getMixins: function(parsed) {
     var result = [];
@@ -215,7 +217,9 @@ Polymer({
       for (let j = 0, jLen = matches.length; j < jLen; j++) {
         let varMatch = matches[j].match(this._propMatcher);
         if (varMatch) {
-          result.push(varMatch[0]);
+          result.push({
+            name: varMatch[0]
+          });
         }
       }
     }
