@@ -173,6 +173,7 @@ Polymer({
    */
   getVariables: function(parsed) {
     var result = [];
+    var names = [];
     if (!parsed.rules || !parsed.rules.length) {
       return result;
     }
@@ -184,15 +185,23 @@ Polymer({
       for (let j = 0, jLen = matches.length; j < jLen; j++) {
         let varMatch = matches[j].match(this._varMatcher);
         if (varMatch) {
-          let data = {
-            name: varMatch[1]
-          };
-          if (varMatch[2]) {
-            data.defaultValue = varMatch[2];
-          } else {
-            data.defaultValue = '';
+          let name = varMatch[1];
+          if (names.indexOf(name) !== -1) {
+            continue;
           }
+          names.push(name);
+          let data = {
+            name: name,
+            defaultValue: varMatch[2] ? varMatch[2] : ''
+          };
           result.push(data);
+          if (data.defaultValue.indexOf('--') === 0) {
+            data = {
+              name: data.defaultValue,
+              defaultValue: ''
+            };
+            result.push(data);
+          }
         }
       }
     }
