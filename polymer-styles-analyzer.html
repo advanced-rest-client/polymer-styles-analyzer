@@ -116,6 +116,9 @@ Polymer({
       if (names.indexOf(name) !== -1) {
         continue;
       }
+      if (name === this.nodeName.toLowerCase()) {
+        continue;
+      }
       names.push(name);
     }
     return names;
