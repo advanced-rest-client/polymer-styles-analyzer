@@ -1,3 +1,19 @@
+<a name="0.1.4"></a>
+## [0.1.4](https://github.com/advanced-rest-client/polymer-styles-analyzer/compare/0.1.3...0.1.4) (2017-11-27)
+
+
+### Fix
+
+* Fixed deep dependencies recognition in shadow DOM ([b64a037a3f1276b2ffe3b753dcf26e13e333748f](https://github.com/advanced-rest-client/polymer-styles-analyzer/commit/b64a037a3f1276b2ffe3b753dcf26e13e333748f))
+
+### Update
+
+* Excluded duplicates from the mixins. ([76b1ed356784298a0c96f266c300199876da6b6d](https://github.com/advanced-rest-client/polymer-styles-analyzer/commit/76b1ed356784298a0c96f266c300199876da6b6d))
+* Excluded self from the custom elements list. ([0ada2539829273eb12729ee9375d0d06fb99448e](https://github.com/advanced-rest-client/polymer-styles-analyzer/commit/0ada2539829273eb12729ee9375d0d06fb99448e))
+* Removed variable names duplicates ([ecda30c638a5adb0a2528c11621320697c77ecdb](https://github.com/advanced-rest-client/polymer-styles-analyzer/commit/ecda30c638a5adb0a2528c11621320697c77ecdb))
+
+
+
 <a name="0.1.3"></a>
 ## [0.1.3](https://github.com/advanced-rest-client/polymer-styles-analyzer/compare/0.1.2...0.1.3) (2017-11-25)
 
