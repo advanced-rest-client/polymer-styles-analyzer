@@ -82,6 +82,12 @@ Polymer({
       type: Array,
       notify: true,
       readOnly: true
+    },
+    // coma separated list of elements that shouldn't be added to the results
+    exclude: String,
+    _excludedElements: {
+      type: Array,
+      computed: '_computeExcludedList(exclude)'
     }
   },
   /**
@@ -105,6 +111,7 @@ Polymer({
   getPotentialCustomElements() {
     var nodes = document.body.querySelectorAll('*');
     var names = [];
+    var exclude = this._excludedElements;
     for (let i = 0, len = nodes.length; i < len; i++) {
       if (!nodes[i].nodeName) {
         continue;
@@ -117,6 +124,9 @@ Polymer({
         continue;
       }
       if (name === this.nodeName.toLowerCase()) {
+        continue;
+      }
+      if (exclude && exclude.indexOf(name) !== -1) {
         continue;
       }
       names.push(name);
@@ -132,16 +142,14 @@ Polymer({
       return Promise.resolve(result);
     }
     // {module: 'paper-input', 'variables': ['--var-name'], 'mixins': ['--mixin-name']}
-    this._extractFromElement(element);
-    return new Promise((resolve) => {
-      this.async(() => resolve(this._extractRules()), 1);
-    });
+    return this._extractFromElement(element)
+    .then(() => this._extractRules());
   },
 
   _extractFromElement: function(moduleName) {
     var element = Polymer.DomModule.import(moduleName);
     if (!element) {
-      return;
+      return Promise.resolve();
     }
     var parsed = this.parseElement(element);
     if (parsed) {
@@ -155,7 +163,7 @@ Polymer({
       result.hasStyles = result.hasVariables || result.hasMixins;
       this._cache[moduleName] = result;
     }
-    this.extractDependencies(moduleName);
+    return this.extractDependencies(moduleName);
   },
   /**
    * Parses CSS styles definition from a `dom-module`.
@@ -254,14 +262,37 @@ Polymer({
     selector += moduleName + '"]';
     var link = document.querySelector(selector);
     if (!link) {
-      return;
+      return Promise.resolve();
     }
     var imports = link.import.querySelectorAll('link[rel]');
+    var exclude = this._excludedElements;
+    var importList = [];
     imports.forEach(item => {
       let name = this.nameFromUrl(item.href);
-      this._mayAppendModule(name);
+      if (exclude && exclude.indexOf(name) !== -1) {
+        return;
+      }
+      importList.push([item, name]);
+      // this._mayAppendModule(name);
+    });
+    return this._importElements(importList);
+  },
+
+  _importElements: function(list) {
+    var item = list.shift();
+    if (!item) {
+      return Promise.resolve();
+    }
+    this._mayAppendModule(item[1]);
+    return new Promise(resolve => {
+      this.importHref(item[0].href, () => {
+        resolve(this._importElements(list));
+      }, () => {
+        resolve(this._importElements(list));
+      });
     });
   },
+
   /**
    * Gets a name of custom element from it's import URL.
    * @param {String} url Element import location
@@ -289,6 +320,15 @@ Polymer({
       result.push(rules[name]);
     });
     return result;
+  },
+  // Computes `_excludedElements` property when exclude changed.
+  _computeExcludedList: function(exclude) {
+    if (!exclude) {
+      return undefined;
+    }
+    var list = exclude.split(',');
+    list = list.map(item => item.trim());
+    return list;
   }
 });
 </script>

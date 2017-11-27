@@ -28,6 +28,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       </template>
     </test-fixture>
 
+    <test-fixture id="exclude">
+      <template>
+        <polymer-styles-analyzer exclude="test-element-b,request-panel"></polymer-styles-analyzer>
+      </template>
+    </test-fixture>
+
     <script>
     /* global fixture, assert */
     suite('basic', function() {
@@ -40,8 +46,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       test('analyze() returns a list', function() {
         return element.analyze()
         .then(result => {
-          assert.typeOf(result, 'array');
-          assert.lengthOf(result, 2);
+          assert.typeOf(result, 'array', 'Result is a list');
+          assert.lengthOf(result, 2, 'Result contains 2 elements');
         });
       });
 
@@ -92,6 +98,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           assert.lengthOf(m1, 2);
           assert.typeOf(m2, 'array');
           assert.lengthOf(m2, 1);
+        });
+      });
+    });
+
+    suite('Exclude elements', function() {
+      var element;
+      setup(function() {
+        element = fixture('exclude');
+      });
+
+      test('Analyzer do not include excluded elements', function() {
+        return element.analyze()
+        .then(result => {
+          assert.lengthOf(result, 1);
+          assert.equal(result[0].name, 'test-element-a');
         });
       });
     });
