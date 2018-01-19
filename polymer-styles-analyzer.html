@@ -88,7 +88,11 @@ Polymer({
     _excludedElements: {
       type: Array,
       computed: '_computeExcludedList(exclude)'
-    }
+    },
+    /**
+     * If set it will skip mixins defined in `iron-flex-layout` element.
+     */
+    skipLayoutVariables: Boolean
   },
   /**
    * Analyzes main document DOM and extracts css variables and mixins from
@@ -230,6 +234,7 @@ Polymer({
       return result;
     }
     var names = [];
+    var skipLayoutVariables = this.skipLayoutVariables;
     for (let i = 0, len = parsed.rules.length; i < len; i++) {
       let matches = parsed.rules[i].parsedCssText.match(Polymer.CssParse._rx.mixinApply);
       if (!matches) {
@@ -240,6 +245,9 @@ Polymer({
         if (varMatch) {
           let name = varMatch[0];
           if (names.indexOf(name) !== -1) {
+            continue;
+          }
+          if (skipLayoutVariables && name.indexOf('--layout-') === 0) {
             continue;
           }
           names.push(name);
