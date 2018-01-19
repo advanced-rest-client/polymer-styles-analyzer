@@ -1,3 +1,17 @@
+<a name="0.1.6"></a>
+## [0.1.6](https://github.com/advanced-rest-client/polymer-styles-analyzer/compare/0.1.5...0.1.6) (2018-01-19)
+
+
+### New
+
+* Adding new property to skip layout mixins ([9bdc27507e1cc2124d8d9372ff64fda06e21fc42](https://github.com/advanced-rest-client/polymer-styles-analyzer/commit/9bdc27507e1cc2124d8d9372ff64fda06e21fc42))
+
+### Update
+
+* Added optimisation for the styles reading. ([3446ba64e62814f757d85279e490711adc1b1d88](https://github.com/advanced-rest-client/polymer-styles-analyzer/commit/3446ba64e62814f757d85279e490711adc1b1d88))
+
+
+
 <a name="0.1.5"></a>
 ## [0.1.5](https://github.com/advanced-rest-client/polymer-styles-analyzer/compare/0.1.4...0.1.5) (2017-11-27)
 
