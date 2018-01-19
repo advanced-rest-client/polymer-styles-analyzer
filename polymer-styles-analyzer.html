@@ -62,6 +62,8 @@ Polymer({
     _cache: Object,
     // List of elements to analyze
     _wokingElements: Array,
+    // List of module names that has been processed.
+    _processed: Array,
     _propMatcher: {
       type: Object,
       value: function() {
@@ -106,6 +108,8 @@ Polymer({
     .then(rules => {
       let result = this._computeResult(rules);
       this._setParsedStyles(result);
+      this._processed = [];
+      this._cache = {};
       return result;
     });
   },
@@ -151,6 +155,13 @@ Polymer({
   },
 
   _extractFromElement: function(moduleName) {
+    if (this._cache && this._cache[moduleName]) {
+      return Promise.resolve();
+    }
+    if (!this._processed) {
+      this._processed = [];
+    }
+    this._processed.push(moduleName);
     var element = Polymer.DomModule.import(moduleName);
     if (!element) {
       return Promise.resolve();
@@ -166,6 +177,9 @@ Polymer({
       result.hasMixins = !!(result.mixins.length);
       result.hasStyles = result.hasVariables || result.hasMixins;
       this._cache[moduleName] = result;
+      if (!this._processed) {
+        this._processed = [];
+      }
     }
     return this.extractDependencies(moduleName);
   },
@@ -176,7 +190,7 @@ Polymer({
    */
   parseElement: function(element) {
     if (!element._cssText) {
-      element._cssText = this.cssFromElement(element);
+      return;
     }
     return Polymer.CssParse.parse(element._cssText);
   },
@@ -317,6 +331,9 @@ Polymer({
       return;
     }
     if (this._wokingElements.indexOf(moduleName) !== -1) {
+      return;
+    }
+    if (this._processed.indexOf(moduleName) !== -1) {
       return;
     }
     this._wokingElements.push(moduleName);
