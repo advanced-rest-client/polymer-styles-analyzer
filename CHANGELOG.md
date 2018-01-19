@@ -1,3 +1,13 @@
+<a name="0.1.8"></a>
+## [0.1.8](https://github.com/advanced-rest-client/polymer-styles-analyzer/compare/0.1.7...0.1.8) (2018-01-19)
+
+
+### Fix
+
+* Adding already imported elements. ([ca6679e85065597e0c24abf97b22cffde0805f26](https://github.com/advanced-rest-client/polymer-styles-analyzer/commit/ca6679e85065597e0c24abf97b22cffde0805f26))
+
+
+
 <a name="0.1.7"></a>
 ## [0.1.7](https://github.com/advanced-rest-client/polymer-styles-analyzer/compare/0.1.6...0.1.7) (2018-01-19)
 
