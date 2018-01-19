@@ -104,6 +104,7 @@ Polymer({
     this._cache = {};
     var elements = this.getPotentialCustomElements();
     this._wokingElements = Array.from(elements);
+    this._appendImportedElements();
     return this._extractRules()
     .then(rules => {
       let result = this._computeResult(rules);
@@ -327,13 +328,13 @@ Polymer({
   },
 
   _mayAppendModule: function(moduleName) {
-    if (this._cache[moduleName]) {
+    if (this._cache && this._cache[moduleName]) {
       return;
     }
-    if (this._wokingElements.indexOf(moduleName) !== -1) {
+    if (this._wokingElements && this._wokingElements.indexOf(moduleName) !== -1) {
       return;
     }
-    if (this._processed.indexOf(moduleName) !== -1) {
+    if (this._processed && this._processed.indexOf(moduleName) !== -1) {
       return;
     }
     this._wokingElements.push(moduleName);
@@ -354,6 +355,19 @@ Polymer({
     var list = exclude.split(',');
     list = list.map(item => item.trim());
     return list;
+  },
+
+  _appendImportedElements: function() {
+    var list = document.querySelectorAll('link');
+    var exclude = this._excludedElements;
+    for (let i = 0, len = list.length; i < len; i++) {
+      let item = list[i];
+      let name = this.nameFromUrl(item.href);
+      if (exclude && exclude.indexOf(name) !== -1) {
+        return;
+      }
+      this._mayAppendModule(name);
+    }
   }
 });
 </script>
